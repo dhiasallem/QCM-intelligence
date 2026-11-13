@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = ""
     mistral_api_key: str = ""
+    mistral_model: str = "mistral-small-latest"
     ai_provider_order: str = "gemini,mistral"
 
     model_config = SettingsConfigDict(env_file="../.env", extra="ignore")
