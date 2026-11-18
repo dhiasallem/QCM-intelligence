@@ -45,8 +45,10 @@ def create_user(
 def list_users(
     role: str | None = None,
     db: Session = Depends(get_db),
-    _: User = Depends(require_role("admin", "teacher")),
+    _: User = Depends(require_role("admin")),
 ):
+    # Réservé à l'admin : avec l'inscription libre, un enseignant ne doit pas
+    # pouvoir lister les comptes des étudiants qui ne sont pas dans ses groupes.
     query = select(User).order_by(User.id)
     if role:
         query = query.where(User.role == role)

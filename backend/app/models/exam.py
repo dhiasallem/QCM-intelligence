@@ -2,8 +2,10 @@ from datetime import datetime
 from sqlalchemy import (
     String, Text, ForeignKey, DateTime, Float, JSON, UniqueConstraint, func,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db import Base
+from app.models.user import User, Group
+from app.models.quiz import Quiz, Question
 
 
 class ExamSession(Base):
@@ -22,6 +24,12 @@ class ExamSession(Base):
     penalty: Mapped[float] = mapped_column(Float, default=0.0)
     # DRAFT | OPEN | CLOSED
     status: Mapped[str] = mapped_column(String(20), default="DRAFT")
+
+    quiz: Mapped[Quiz] = relationship()
+    group: Mapped[Group] = relationship()
+    attempts: Mapped[list["Attempt"]] = relationship(
+        back_populates="session", cascade="all, delete-orphan"
+    )
 
 
 class Attempt(Base):
@@ -43,6 +51,17 @@ class Attempt(Base):
     final_score: Mapped[float | None] = mapped_column(Float)
     teacher_comment: Mapped[str | None] = mapped_column(Text)
 
+    session: Mapped[ExamSession] = relationship(back_populates="attempts")
+    student: Mapped[User] = relationship()
+    attempt_questions: Mapped[list["AttemptQuestion"]] = relationship(
+        back_populates="attempt",
+        cascade="all, delete-orphan",
+        order_by="AttemptQuestion.position",
+    )
+    answers: Mapped[list["Answer"]] = relationship(
+        back_populates="attempt", cascade="all, delete-orphan"
+    )
+
 
 class AttemptQuestion(Base):
     __tablename__ = "attempt_questions"
@@ -55,6 +74,9 @@ class AttemptQuestion(Base):
     question_id: Mapped[int] = mapped_column(ForeignKey("questions.id"))
     position: Mapped[int]
     option_order: Mapped[list] = mapped_column(JSON)  # liste d'ids d'options mélangés
+
+    attempt: Mapped[Attempt] = relationship(back_populates="attempt_questions")
+    question: Mapped[Question] = relationship()
 
 
 class Answer(Base):
@@ -70,6 +92,9 @@ class Answer(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+    attempt: Mapped[Attempt] = relationship(back_populates="answers")
+    question: Mapped[Question] = relationship()
 
 
 class AuditLog(Base):

@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime
 from sqlalchemy import String, ForeignKey, DateTime, func, Table, Column
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -9,6 +10,14 @@ group_members = Table(
     Column("group_id", ForeignKey("student_groups.id", ondelete="CASCADE"), primary_key=True),
     Column("student_id", ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
 )
+
+# Alphabet sans caractères ambigus (0/O, 1/I/L) pour faciliter la saisie du code
+CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+CODE_LENGTH = 7
+
+
+def generate_group_code() -> str:
+    return "".join(secrets.choice(CODE_ALPHABET) for _ in range(CODE_LENGTH))
 
 
 class User(Base):
@@ -31,4 +40,9 @@ class Group(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
     teacher_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    # Code d'accès que les étudiants saisissent pour rejoindre le groupe
+    code: Mapped[str] = mapped_column(
+        String(12), unique=True, index=True, default=generate_group_code
+    )
+    teacher: Mapped[User] = relationship(foreign_keys=[teacher_id])
     students: Mapped[list[User]] = relationship(secondary=group_members)

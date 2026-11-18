@@ -8,6 +8,14 @@ class UserCreate(BaseModel):
     role: str = Field(pattern="^(admin|teacher|student)$")
 
 
+class RegisterRequest(BaseModel):
+    """Inscription publique : uniquement enseignant ou étudiant (jamais admin)."""
+    name: str = Field(min_length=2, max_length=120)
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+    role: str = Field(pattern="^(teacher|student)$")
+
+
 class UserOut(BaseModel):
     id: int
     name: str

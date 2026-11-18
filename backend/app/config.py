@@ -1,4 +1,7 @@
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+ENV_PATH = Path(__file__).resolve().parent.parent.parent / ".env"
 
 class Settings(BaseSettings):
     database_url: str
@@ -12,6 +15,9 @@ class Settings(BaseSettings):
     mistral_model: str = "mistral-small-latest"
     ai_provider_order: str = "gemini,mistral"
 
-    model_config = SettingsConfigDict(env_file="../.env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=(str(ENV_PATH), "../.env", ".env"),
+        extra="ignore",
+    )
 
 settings = Settings()
